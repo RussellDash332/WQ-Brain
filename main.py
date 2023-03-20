@@ -282,6 +282,7 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
                             my_alpha, passed, my_neutralization, my_decay, my_truncation,
                             sharpe, fitness, turnover, weight, subsharpe, corr
                         ]
+                        logging.debug(row)
                         writer.writerow(row)
 
 
