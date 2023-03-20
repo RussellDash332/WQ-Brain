@@ -15,7 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from commands import price_vs_volume, volume_vs_price, price_vs_price, scale_and_corr, from_wq, sample_1, sample_2
 
-#logging.basicConfig(encoding='utf-8', level=logging.INFO)
+logging.basicConfig(encoding='utf-8', level=logging.INFO)
 
 def download_chromedriver():
     version = requests.get('https://chromedriver.storage.googleapis.com/LATEST_RELEASE').text
@@ -29,18 +29,6 @@ def download_chromedriver():
     os.remove('chromedriver.zip')
 
 def main(my_neutralizations, my_decays, my_truncations, my_alphas):
-    # write header
-    csv_file = f'{int(time.time())}.csv'
-    with open(csv_file, 'w', newline='') as f:
-        writer = csv.writer(f)
-        header = [
-            'command', 'passed', 'neutralization', 'decay', 'truncation',
-            'sharpe', 'fitness', 'turnover', 'weight',
-            'subsharpe', 'correlation'
-        ]
-        writer.writerow(header)
-    result = {}
-
     logging.info('Getting webdriver')
     options = webdriver.ChromeOptions()
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -113,190 +101,164 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
             checkbox.click()
             break
 
-    for my_neutralization in my_neutralizations:
-        for my_decay in my_decays:
-            for my_truncation in my_truncations:
-                logging.info('Opening simulation settings')
-                settings = driver.find_elements(By.CLASS_NAME, "editor-top-bar-left__settings-btn")[1]
-                settings.click()
+
+    logging.info('Creating CSV file')
+    csv_file = f'{int(time.time())}.csv'
+    with open(csv_file, 'w', newline='') as f:
+        writer = csv.writer(f)
+        header = [
+            'command', 'passed', 'neutralization', 'decay', 'truncation',
+            'sharpe', 'fitness', 'turnover', 'weight',
+            'subsharpe', 'correlation'
+        ]
+        writer.writerow(header)
+
+        for my_neutralization in my_neutralizations:
+            for my_decay in my_decays:
+                for my_truncation in my_truncations:
+                    logging.info('Opening simulation settings')
+                    settings = driver.find_elements(By.CLASS_NAME, "editor-top-bar-left__settings-btn")[1]
+                    settings.click()
 
 
-                # the region stays at USA
-                # universe stays at TOP3000
-                # delay stays at 1
+                    # the region stays at USA
+                    # universe stays at TOP3000
+                    # delay stays at 1
 
 
-                logging.info('Setting neutralization')
-                neutralization = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.ID, "neutralization"))
-                )
-                neutralization.click()
-                neu_types = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "select-portal__item"))
-                )
-                neu_types = driver.find_elements(By.CLASS_NAME, "select-portal__item")
-                for neu_type in neu_types:
-                    if neu_type.text == my_neutralization:
-                        neu_type.click()
-                        break
-
-
-                logging.info('Setting decay')
-                decay_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.NAME, "decay"))
-                )
-                for _ in range(3):
-                    decay_element.send_keys(Keys.BACK_SPACE)
-                decay_element.send_keys(f'{my_decay}')
-
-
-                logging.info('Setting truncation')
-                trunc_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.NAME, "truncation"))
-                )
-                for _ in range(5):
-                    trunc_element.send_keys(Keys.BACK_SPACE)
-                trunc_element.send_keys(f'{my_truncation}')
-
-
-                # pasteurization stays on
-                # nan handling stays on
-
-
-                logging.info('Apply changes to simulation settings')
-                apply = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, "button--lg"))
-                )
-                apply.click()
-
-
-                for my_alpha in my_alphas:
-                    logging.info('Inputting the alpha')
-                    alpha = driver.find_element(By.CLASS_NAME, "inputarea")
-                    alpha.send_keys(my_alpha)
-
-
-                    logging.info('Simulating')
-                    simulate_buttons = driver.find_elements(By.CLASS_NAME, "editor-simulate-button-text--is-code")
-                    assert(len(simulate_buttons) == 1)
-                    simulate_button = simulate_buttons[0]
-                    while True:
-                        try:
-                            simulate_button.click()
+                    logging.info('Setting neutralization')
+                    neutralization = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.ID, "neutralization"))
+                    )
+                    neutralization.click()
+                    neu_types = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, "select-portal__item"))
+                    )
+                    neu_types = driver.find_elements(By.CLASS_NAME, "select-portal__item")
+                    for neu_type in neu_types:
+                        if neu_type.text == my_neutralization:
+                            neu_type.click()
                             break
+
+
+                    logging.info('Setting decay')
+                    decay_element = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.NAME, "decay"))
+                    )
+                    for _ in range(3):
+                        decay_element.send_keys(Keys.BACK_SPACE)
+                    decay_element.send_keys(f'{my_decay}')
+
+
+                    logging.info('Setting truncation')
+                    trunc_element = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.NAME, "truncation"))
+                    )
+                    for _ in range(5):
+                        trunc_element.send_keys(Keys.BACK_SPACE)
+                    trunc_element.send_keys(f'{my_truncation}')
+
+
+                    # pasteurization stays on
+                    # nan handling stays on
+
+
+                    logging.info('Apply changes to simulation settings')
+                    apply = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, "button--lg"))
+                    )
+                    apply.click()
+
+
+                    for my_alpha in my_alphas:
+                        logging.info('Inputting the alpha')
+                        alpha = driver.find_element(By.CLASS_NAME, "inputarea")
+                        alpha.send_keys(my_alpha)
+
+
+                        logging.info('Simulating')
+                        simulate_buttons = driver.find_elements(By.CLASS_NAME, "editor-simulate-button-text--is-code")
+                        assert(len(simulate_buttons) == 1)
+                        simulate_button = simulate_buttons[0]
+                        while True:
+                            try:
+                                simulate_button.click()
+                                break
+                            except:
+                                continue
+
+
+                        logging.info('Waiting for simulation to end (0%)')
+                        try:
+                            progress = WebDriverWait(driver, 60).until(
+                               EC.presence_of_element_located((By.CLASS_NAME, 'progress'))
+                            )
+                            while progress.text != '100%':
+                                time.sleep(5)
+                                logging.info(f'Waiting for simulation to end ({progress.text})')
+                                progress = driver.find_element(By.CLASS_NAME, 'progress')
                         except:
-                            continue
+                            time.sleep(3)
 
 
-                    logging.info('Waiting for simulation to end (0%)')
-                    try:
-                        progress = WebDriverWait(driver, 60).until(
-                           EC.presence_of_element_located((By.CLASS_NAME, 'progress'))
-                        )
-                        while progress.text != '100%':
-                            time.sleep(5)
-                            logging.info(f'Waiting for simulation to end ({progress.text})')
-                            progress = driver.find_element(By.CLASS_NAME, 'progress')
-                    except:
-                        time.sleep(3)
+                        logging.info('Reverting editor for alpha')
+                        for _ in range(len(my_alpha)*2):
+                           alpha.send_keys(Keys.BACK_SPACE)
 
 
-                    logging.info('Reverting editor for alpha')
-                    for _ in range(len(my_alpha)):
-                       alpha.send_keys(Keys.BACK_SPACE)
+                        logging.info('Getting all passed test cases')
+                        try:
+                            Pass = WebDriverWait(driver, 300).until(
+                                EC.presence_of_element_located((By.CLASS_NAME, "sumary__testing-checks-PASS-list"))
+                            )
+                            Pass = driver.find_element(By.CLASS_NAME, "sumary__testing-checks-PASS-list")
+
+                            pass_toggle = WebDriverWait(driver, 300).until(
+                                EC.presence_of_element_located((By.CLASS_NAME, "sumary__testing-checks-icon--PASS-down"))
+                            )
+                            pass_toggle = driver.find_element(By.CLASS_NAME, 'sumary__testing-checks-icon--PASS-down')
+                            
+                            pass_toggle.click()
+                            pass_lines = []
+                            pass_text = Pass.text
+                            pass_lines += pass_text.split('\n')
+                            logging.info('Success!')
+                        except:
+                            logging.info('Failed to get all passed test cases')
+                        time.sleep(0.1)
 
 
-                    logging.info('Getting all passed test cases')
-                    try:
-                        Pass = WebDriverWait(driver, 300).until(
-                            EC.presence_of_element_located((By.CLASS_NAME, "sumary__testing-checks-PASS-list"))
-                        )
-                        Pass = driver.find_element(By.CLASS_NAME, "sumary__testing-checks-PASS-list")
+                        logging.info('Getting all failed test cases')
+                        try:
+                            Fail = driver.find_element(By.CLASS_NAME, 'sumary__testing-checks-FAIL-list')
+                            fail_toggle = driver.find_element(By.CLASS_NAME, 'sumary__testing-checks-icon--FAIL-down')
+                            fail_toggle.click()
+                            fail_lines = []
+                            fail_text = Fail.text
+                            fail_lines += fail_text.split('\n')
+                            logging.info('Success!')
+                        except:
+                            logging.info('Failed to get all failed test cases')
 
-                        pass_toggle = WebDriverWait(driver, 300).until(
-                            EC.presence_of_element_located((By.CLASS_NAME, "sumary__testing-checks-icon--PASS-down"))
-                        )
-                        pass_toggle = driver.find_element(By.CLASS_NAME, 'sumary__testing-checks-icon--PASS-down')
-                        
-                        pass_toggle.click()
-                        pass_lines = []
-                        pass_text = Pass.text
-                        pass_lines += pass_text.split('\n')
-                        logging.info('Success!')
-                    except:
-                        logging.info('Failed to get all passed test cases')
-                    time.sleep(0.1)
-
-
-                    logging.info('Getting all failed test cases')
-                    try:
-                        Fail = driver.find_element(By.CLASS_NAME, 'sumary__testing-checks-FAIL-list')
-                        fail_toggle = driver.find_element(By.CLASS_NAME, 'sumary__testing-checks-icon--FAIL-down')
-                        fail_toggle.click()
-                        fail_lines = []
-                        fail_text = Fail.text
-                        fail_lines += fail_text.split('\n')
-                        logging.info('Success!')
-                    except:
-                        logging.info('Failed to get all failed test cases')
-
-
-                    # expected 7 passed test cases
-                    if len(pass_lines) == 7:
-                        check = WebDriverWait(driver, 10).until(
-                            EC.presence_of_element_located((By.CLASS_NAME, "editor-button__text"))
-                        )
-                        check.click()
 
                         for line in pass_lines:
                             elements = line.split(' ')
+                            if elements[0] == 'Sharpe':             sharpe = elements[2]
+                            if elements[0] == 'Turnover':           turnover = elements[2]
+                            if elements[0] == 'Sub-universe':       subsharpe = elements[3]
+                            if elements[0] == 'Fitness':            fitness = elements[2]
+                            if elements[0] == 'Weight':             weight = 'Weight is well distributed over instruments.'
 
-                            if elements[0] == 'Sharpe':
-                                sharpe = elements[2]
-                            if elements[0] == 'Turnover':
-                                turnover = elements[2]
-                            if elements[0] == 'Sub-universe':
-                                subsharpe = elements[3]
-                            if elements[0] == 'Fitness':
-                                fitness = elements[2]
-                            if elements[0] == 'Weight':
-                                weight = 'Weight is well distributed over instruments.'
-                            if elements[0] == 'Self-correlation':
-                                corr = elements[1]
-                        information = {
-                            'passed': len(pass_lines),
-                            'sharpe': float(sharpe),
-                            'turnover': float(turnover[:-1]),
-                            'subsharpe': float(subsharpe),
-                            'fitness': float(fitness),
-                            'weight': weight,
-                            'corr': float(corr)
-                        }
-                    else:
-                        for line in pass_lines:
-                            elements = line.split(' ')
-                            if elements[0] == 'Sharpe':
-                                sharpe = elements[2]
-                            if elements[0] == 'Turnover':
-                                turnover = elements[2]
-                            if elements[0] == 'Sub-universe':
-                                subsharpe = elements[3]
-                            if elements[0] == 'Fitness':
-                                fitness = elements[2]
-                            if elements[0] == 'Weight':
-                                weight = 'Weight is well distributed over instruments.'
+
                         for line in fail_lines:
                             elements = line.split(' ')
-                            if elements[0] == 'Sharpe':
-                                sharpe = elements[2]
-                            if elements[0] == 'Turnover':
-                                turnover = elements[2]
-                            if elements[0] == 'Sub-universe':
-                                subsharpe = elements[3]
-                            if elements[0] == 'Fitness':
-                                fitness = elements[2]
-                            if elements[0] == 'Weight':
-                                weight = 'Weight is too strongly concentrated or too few instruments are assigned weight.'
+                            if elements[0] == 'Sharpe':             sharpe = elements[2]
+                            if elements[0] == 'Turnover':           turnover = elements[2]
+                            if elements[0] == 'Sub-universe':       subsharpe = elements[3]
+                            if elements[0] == 'Fitness':            fitness = elements[2]
+                            if elements[0] == 'Weight':             weight = 'Weight is too strongly concentrated or too few instruments are assigned weight.'
+
+
                         information = {
                             'passed': len(pass_lines),
                             'sharpe': float(sharpe),
@@ -307,32 +269,29 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
                             'corr': -1
                         }
 
-                    def debug():
-                        print('### PASSED ###')
-                        for row in pass_lines: print(row)
-                        print('### FAILED ###')
-                        for row in fail_lines: print(row)
-                    #debug()
 
-                    # done!
-                    result[(my_alpha, my_neutralization, my_decay, my_truncation)] = information
+                        logging.info('Adding result to CSV')
+                        passed    = information['passed']
+                        sharpe    = information['sharpe']
+                        fitness   = information['fitness']
+                        turnover  = information['turnover']
+                        weight    = information['weight']
+                        subsharpe = information['subsharpe']
+                        corr      = information['corr']
+                        row = [
+                            my_alpha, passed, my_neutralization, my_decay, my_truncation,
+                            sharpe, fitness, turnover, weight, subsharpe, corr
+                        ]
+                        writer.writerow(row)
 
-    logging.info('Writing result to csv')
-    with open(csv_file, 'a', newline='') as f:
-        writer = csv.writer(f)
-        for (alpha, neu, decay, trunc), values in result.items():
-            passed    = values['passed']
-            sharpe    = values['sharpe']
-            fitness   = values['fitness']
-            turnover  = values['turnover']
-            weight    = values['weight']
-            subsharpe = values['subsharpe']
-            corr      = values['corr']
-            row = [
-                alpha, passed, neu, decay, trunc, sharpe,
-                fitness, turnover, weight, subsharpe, corr
-            ]
-            writer.writerow(row)
+
+                        def debug():
+                            print('### PASSED ###')
+                            for row in pass_lines: print(row)
+                            print('### FAILED ###')
+                            for row in fail_lines: print(row)
+                        #debug()
+
 
 if __name__ == '__main__':
     neutralizations = ['Market', 'Subindustry']
