@@ -335,16 +335,16 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
             writer.writerow(row)
 
 if __name__ == '__main__':
-    my_neutralizations = ['Market', 'Subindustry']
-    my_decays = [4, 6, 10]
-    my_truncations = [0.07, 0.08]
-    my_alphas = sample_1() + sample_2()
+    neutralizations = ['Market', 'Subindustry']
+    decays = [4, 6, 10]
+    truncations = [0.07, 0.08]
+    alphas = (sample_1() + sample_2())
 
     curr_os = platform.platform()
     if curr_os.startswith('Windows'):
         download_chromedriver()
         try:
-            main()
+            main(neutralizations, decays, truncations, alphas)
         except Exception as e:
             print(f'{type(e).__name__}:', e)
             try: driver.quit()
