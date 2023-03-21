@@ -15,5 +15,5 @@ All credits go to https://github.com/AbnerTeng/WorldQuant-Brain.
 1. `turnover > 1`
 1. `turnover < 70`
 1. `subsharpe > 0.58`
-1. `fitness > 1`
+1. `fitness >= 1`
 1. `Weight is well distributed over instruments`
