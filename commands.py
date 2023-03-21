@@ -129,7 +129,7 @@ def from_arxiv():
         '((rank(ts_max(ts_delta(group_neutralize(vwap, industry), 2), 4))^ts_rank(ts_corr(((close * 0.490655) + (vwap * (1 - 0.490655))), (ts_sum(volume,20)/20), 4), 9)) * -1)',
         '((rank(ts_delta(vwap, 1))^ts_rank(ts_corr(group_neutralize(close, industry), (ts_sum(volume,50)/50), 17), 17)) * -1)',
         'max(ts_rank(decay_linear(ts_corr(ts_rank(close, 3), ts_rank((ts_sum(volume,180)/180), 12), 18), 4), 15), ts_rank(decay_linear((rank(((low + open) - (vwap + vwap)))^2), 16), 4))',
-        '(rank(decay_linear(ts_corr(((high + low) / 2), (ts_sum(volume,40)/40), 8), 10.1519)) / rank(decay_linear(ts_corr(ts_rank(vwap, 3), ts_rank(volume, 18), 6), 2)))',
+        '(rank(decay_linear(ts_corr(((high + low) / 2), (ts_sum(volume,40)/40), 8), 10)) / rank(decay_linear(ts_corr(ts_rank(vwap, 3), ts_rank(volume, 18), 6), 2)))',
         '(max(rank(decay_linear(ts_delta(vwap, 4), 2)), ts_rank(decay_linear(((ts_delta(((open * 0.147155) + (low * (1 - 0.147155))), 2) / ((open * 0.147155) + (low * (1 - 0.147155)))) * -1), 3), 16)) * -1)',
         '((rank(ts_corr(close, sum((ts_sum(volume,30)/30), 37), 15)) < rank(ts_corr(rank(((high * 0.0261661) + (vwap * (1 - 0.0261661)))), rank(volume), 11))) * -1)',
         '(rank(ts_corr(vwap, volume, 4)) < rank(ts_corr(rank(low), rank((ts_sum(volume,50)/50)), 12)))',

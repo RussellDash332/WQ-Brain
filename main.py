@@ -204,7 +204,7 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
                         logging.info('Reverting editor for alpha')
                         for _ in range(len(my_alpha)+10):
                            alpha.send_keys(Keys.BACK_SPACE)
-                        time.sleep(max(5,0.1*len(my_alpha)))
+                        time.sleep(max(5, 0.08*len(my_alpha)))
 
 
                         logging.info('Getting all passed test cases')
