@@ -13,7 +13,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from commands import price_vs_volume, volume_vs_price, price_vs_price, scale_and_corr, from_wq, sample_1, sample_2
+from parameters import NEUTRALIZATIONS, DECAYS, TRUNCATIONS, ALPHAS
 
 logging.basicConfig(encoding='utf-8', level=logging.INFO)
 
@@ -204,16 +204,17 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
                         logging.info('Reverting editor for alpha')
                         for _ in range(len(my_alpha)*2):
                            alpha.send_keys(Keys.BACK_SPACE)
+                        time.sleep(5)
 
 
                         logging.info('Getting all passed test cases')
                         try:
-                            Pass = WebDriverWait(driver, 300).until(
+                            Pass = WebDriverWait(driver, 20).until(
                                 EC.presence_of_element_located((By.CLASS_NAME, "sumary__testing-checks-PASS-list"))
                             )
                             Pass = driver.find_element(By.CLASS_NAME, "sumary__testing-checks-PASS-list")
 
-                            pass_toggle = WebDriverWait(driver, 300).until(
+                            pass_toggle = WebDriverWait(driver, 20).until(
                                 EC.presence_of_element_located((By.CLASS_NAME, "sumary__testing-checks-icon--PASS-down"))
                             )
                             pass_toggle = driver.find_element(By.CLASS_NAME, 'sumary__testing-checks-icon--PASS-down')
@@ -282,7 +283,7 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
                             my_alpha, passed, my_neutralization, my_decay, my_truncation,
                             sharpe, fitness, turnover, weight, subsharpe, corr
                         ]
-                        logging.debug(row)
+                        logging.info(row)
                         writer.writerow(row)
 
 
@@ -295,16 +296,11 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
 
 
 if __name__ == '__main__':
-    neutralizations = ['Market', 'Subindustry']
-    decays = [4, 6, 10]
-    truncations = [0.07, 0.08]
-    alphas = (sample_1() + sample_2())
-
     curr_os = platform.platform()
     if curr_os.startswith('Windows'):
         download_chromedriver()
         try:
-            main(neutralizations, decays, truncations, alphas)
+            main(NEUTRALIZATIONS, DECAYS, TRUNCATIONS, ALPHAS)
         except Exception as e:
             print(f'{type(e).__name__}:', e)
             try: driver.quit()
