@@ -145,7 +145,7 @@ def from_arxiv():
         '(rank(ts_corr(((high * 0.876703) + (close * (1 - 0.876703))), (ts_sum(volume,30)/30), 9))^rank(ts_corr(ts_rank(((high + low) / 2), 3), ts_rank(volume, 10), 7)))',
         '((ts_rank(ts_corr(close, sum((ts_sum(volume,20)/20), 14), 6), 20) < rank(((open + close) - (vwap + open)))) * -1)',
         '(max(rank(decay_linear(ts_delta(((close * 0.369701) + (vwap * (1 - 0.369701))), 1), 2)), ts_rank(decay_linear(abs(ts_corr(group_neutralize((ts_sum(volume,81)/81), industry), close, 13)), 4), 14)) * -1)',
-        'min(rank(decay_linear(((rank(open) + rank(low)) - (rank(high) + rank(close))), 8)), ts_rank(decay_linear(ts_corr(ts_rank(close, 8), ts_rank((ts_sum(volume,60)/60), 20.6966), 8), 6), 2))',
+        'min(rank(decay_linear(((rank(open) + rank(low)) - (rank(high) + rank(close))), 8)), ts_rank(decay_linear(ts_corr(ts_rank(close, 8), ts_rank((ts_sum(volume,60)/60), 20), 8), 6), 2))',
         '(ts_rank(decay_linear(ts_corr(((low * 0.967285) + (low * (1 - 0.967285))), (ts_sum(volume,10)/10), 6), 5), 3) - ts_rank(decay_linear(ts_delta(group_neutralize(vwap, industry), 3), 10), 15))',
         '((rank((close - ts_max(close, 4)))^ts_rank(ts_corr(group_neutralize((ts_sum(volume,40)/40), subindustry), low, 5), 3)) * -1)',
         '((ts_rank(decay_linear(decay_linear(ts_corr(group_neutralize(close, industry), volume, 9), 16), 3), 4) - rank(decay_linear(ts_corr(vwap, (ts_sum(volume,30)/30), 4), 2))) * -1)',
