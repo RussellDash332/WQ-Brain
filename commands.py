@@ -39,7 +39,7 @@ def from_wq_3():
         *[f'{op}(pasteurize({p1}/{p2}, {d}))' for op in OP_one for d in [2, 3, 5, 7]],
         *[f'-ts_mean({p1}, {d1})*rank(sigmoid(ts_mean({p2}, {d2})))' for d1 in [17, 23] for d2 in [30, 60]],
         *[f'-(power(ts_mean({p1} - {p2}, {d}), {p}) / (power(ts_mean(high - low, {d}), {p}) + {eps}))' for eps in [0.001, 0.005] for d in [13, 17, 19] for p in [1.5, 1.7, 1.9]],
-        *[f'power(rank(-returns*(adv20*vwap*({p1} - {p2}))*rank(-returns*(adv20*vwap*(open - low)), {p})*rank(-(close - ts_mean(close, {d})))' for d in [30, 45, 60] for p in [1.5, 1.7, 1.9]]
+        *[f'power(rank(-returns*adv20*vwap*({p1} - {p2}))*rank(-returns*adv20*vwap*(open - low)), {p})*rank(-(close - ts_mean(close, {d})))' for d in [30, 45, 60] for p in [1.5, 1.7, 1.9]]
     ] for p1 in PRICES for p2 in PRICES if p1 != p2], start=[])
 
 def scale_and_corr():
