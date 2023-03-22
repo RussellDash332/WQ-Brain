@@ -13,9 +13,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from parameters import NEUTRALIZATIONS, DECAYS, TRUNCATIONS, ALPHAS
+from parameters import DATA
 
-logging.basicConfig(encoding='utf-8', level=logging.INFO)
+logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s')
 
 def download_chromedriver():
     version = requests.get('https://chromedriver.storage.googleapis.com/LATEST_RELEASE').text
@@ -28,7 +28,15 @@ def download_chromedriver():
         chromezip.extractall()
     os.remove('chromedriver.zip')
 
-def main(my_neutralizations, my_decays, my_truncations, my_alphas):
+def main(data=DATA):
+    logging.info('Extracting data')
+    my_neutralizations = data['neutralizations']
+    my_decays = data['decays']
+    my_delay = data['delay']
+    my_truncations = data['truncations']
+    my_alphas = data['alphas']
+
+
     logging.info('Getting webdriver')
     options = webdriver.ChromeOptions()
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -103,7 +111,7 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
 
 
     logging.info('Creating CSV file')
-    csv_file = f'{int(time.time())}.csv'
+    csv_file = f'{int(time.time())}_D{my_delay}.csv'
     with open(csv_file, 'w', newline='') as f:
         writer = csv.writer(f)
         header = [
@@ -123,7 +131,21 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
 
                     # the region stays at USA
                     # universe stays at TOP3000
-                    # delay stays at 1
+
+
+                    logging.info('Setting delay')
+                    delay = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.ID, "delay"))
+                    )
+                    delay.click()
+                    delay_types = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, "select-portal__item"))
+                    )
+                    delay_types = driver.find_elements(By.CLASS_NAME, "select-portal__item")
+                    for delay_type in delay_types:
+                        if delay_type.text == my_delay:
+                            delay_type.click()
+                            break
 
 
                     logging.info('Setting neutralization')
@@ -171,7 +193,7 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
 
 
                     for my_alpha in my_alphas:
-                        logging.info('Inputting the alpha')
+                        logging.info(f'Inputting the alpha: {my_alpha}')
                         alpha = driver.find_element(By.CLASS_NAME, "inputarea")
                         alpha.send_keys(my_alpha)
 
@@ -202,7 +224,7 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
 
 
                         logging.info('Reverting editor for alpha')
-                        for _ in range(len(my_alpha)+10):
+                        for _ in range(len(my_alpha) + 10):
                            alpha.send_keys(Keys.BACK_SPACE)
                         time.sleep(max(5, 0.08*len(my_alpha)))
 
@@ -223,9 +245,10 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
                             pass_lines = []
                             pass_text = Pass.text
                             pass_lines += pass_text.split('\n')
-                            logging.info('Success!')
+                            logging.info('Success on getting passed test cases!')
                         except:
-                            logging.info('Failed to get all passed test cases')
+                            pass_lines = []
+                            logging.info('Cannot get all passed test cases')
                         time.sleep(0.1)
 
 
@@ -237,54 +260,62 @@ def main(my_neutralizations, my_decays, my_truncations, my_alphas):
                             fail_lines = []
                             fail_text = Fail.text
                             fail_lines += fail_text.split('\n')
-                            logging.info('Success!')
+                            logging.info('Success on getting failed test cases!')
                         except:
-                            logging.info('Failed to get all failed test cases')
+                            fail_lines = []
+                            logging.info('Cannot get all failed test cases')
 
 
-                        for line in pass_lines:
-                            elements = line.split(' ')
-                            if elements[0] == 'Sharpe':             sharpe = elements[2]
-                            if elements[0] == 'Turnover':           turnover = elements[2]
-                            if elements[0] == 'Sub-universe':       subsharpe = elements[3]
-                            if elements[0] == 'Fitness':            fitness = elements[2]
-                            if elements[0] == 'Weight':             weight = 'Weight is well distributed over instruments.'
+                        # If this row is seen, retry the alpha simulation
+                        def ignore_result():
+                            nonlocal weight
+                            weight = 'THERE IS AN ISSUE ON GETTING THE RESULTS, PLEASE CHECK AGAIN'
+                        ignore_result()
 
 
-                        for line in fail_lines:
-                            elements = line.split(' ')
-                            if elements[0] == 'Sharpe':             sharpe = elements[2]
-                            if elements[0] == 'Turnover':           turnover = elements[2]
-                            if elements[0] == 'Sub-universe':       subsharpe = elements[3]
-                            if elements[0] == 'Fitness':            fitness = elements[2]
-                            if elements[0] == 'Weight':             weight = 'Weight is too strongly concentrated or too few instruments are assigned weight.'
-
-
-                        information = {
-                            'passed': len(pass_lines),
-                            'sharpe': float(sharpe),
-                            'turnover': float(turnover[:-1]),
-                            'subsharpe': float(subsharpe),
-                            'fitness': float(fitness),
-                            'weight': weight,
-                            'corr': -1
-                        }
+                        try:
+                            for line in pass_lines:
+                                elements = line.split(' ')
+                                if elements[0] == 'Sharpe':         sharpe = elements[2]
+                                if elements[0] == 'Turnover':       turnover = elements[2]
+                                if elements[0] == 'Sub-universe':   subsharpe = elements[3]
+                                if elements[0] == 'Fitness':        fitness = elements[2]
+                                if elements[0] == 'Weight':         weight = 'Weight is well distributed over instruments.'
+                            for line in fail_lines:
+                                elements = line.split(' ')
+                                if elements[0] == 'Sharpe':         sharpe = elements[2]
+                                if elements[0] == 'Turnover':       turnover = elements[2]
+                                if elements[0] == 'Sub-universe':   subsharpe = elements[3]
+                                if elements[0] == 'Fitness':        fitness = elements[2]
+                                if elements[0] == 'Weight':         weight = 'Weight is too strongly concentrated or too few instruments are assigned weight.'
+                            information = {
+                                'passed': len(pass_lines),
+                                'sharpe': float(sharpe),
+                                'turnover': float(turnover[:-1]),
+                                'subsharpe': float(subsharpe),
+                                'fitness': float(fitness),
+                                'weight': weight,
+                                'corr': -1
+                            }
+                        except Exception as e:
+                            logging.info('Ignoring issue:', e)
+                            ignore_result()
 
 
                         logging.info('Adding result to CSV')
-                        passed    = information['passed']
-                        sharpe    = information['sharpe']
-                        fitness   = information['fitness']
-                        turnover  = information['turnover']
-                        weight    = information['weight']
-                        subsharpe = information['subsharpe']
-                        corr      = information['corr']
                         row = [
-                            my_alpha, passed, my_neutralization, my_decay, my_truncation,
-                            sharpe, fitness, turnover, weight, subsharpe, corr
+                            my_alpha, information['passed'],
+                            my_neutralization, my_decay, my_truncation,
+                            information['sharpe'],
+                            information['fitness'],
+                            information['turnover'],
+                            information['weight'],
+                            information['subsharpe'],
+                            information['corr']
                         ]
-                        logging.info(row)
+                        logging.info(f"{information['passed']}/7 test cases passed!")
                         writer.writerow(row)
+                        logging.info('Result added to CSV!')
 
 
                         def debug():
@@ -300,7 +331,7 @@ if __name__ == '__main__':
     if curr_os.startswith('Windows'):
         download_chromedriver()
         try:
-            main(NEUTRALIZATIONS, DECAYS, TRUNCATIONS, ALPHAS)
+            main()
         except Exception as e:
             print(f'{type(e).__name__}:', e)
             try: driver.quit()

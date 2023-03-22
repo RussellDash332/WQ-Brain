@@ -182,6 +182,17 @@ def sample_2():
             commands.append(command)
     return commands
 
+def sample_3():
+    D = [1, 2, 5, 10, 20, 30, 50, 100] 
+    commands = []
+    for d in D:
+        for p in PRICES:
+            for p_or_m in P_or_M:
+                for p_or_m_2 in P_or_M:
+                    command = f'{p_or_m}rank({p_or_m_2}ts_mean({p}, {d}))'
+                    commands.append(command)
+    return commands
+
 if __name__ == '__main__':
-    funcs = [scale_and_corr, from_wq_1, from_wq_2, from_wq_3, from_arxiv, sample_1, sample_2]
+    funcs = [scale_and_corr, from_wq_1, from_wq_2, from_wq_3, from_arxiv, sample_1, sample_2, sample_3]
     [print(f.__name__, len(f())) for f in funcs]
