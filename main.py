@@ -298,7 +298,7 @@ def main(data=DATA):
                                 'corr': -1
                             }
                         except Exception as e:
-                            logging.info('Ignoring issue:', e)
+                            logging.info(f'Ignoring issue: {e}')
                             ignore_result()
 
 
