@@ -143,7 +143,7 @@ def main(data=DATA):
                     )
                     delay_types = driver.find_elements(By.CLASS_NAME, "select-portal__item")
                     for delay_type in delay_types:
-                        if delay_type.text == my_delay:
+                        if int(delay_type.text) == my_delay:
                             delay_type.click()
                             break
 
