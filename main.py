@@ -39,7 +39,7 @@ def main(data=DATA):
 
     logging.info('Getting webdriver')
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
+    #options.add_argument('--headless')
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
@@ -214,7 +214,7 @@ def main(data=DATA):
                         logging.info('Waiting for simulation to end (0%)')
                         try:
                             progress = WebDriverWait(driver, 60).until(
-                               EC.presence_of_element_located((By.CLASS_NAME, 'progress'))
+                                EC.presence_of_element_located((By.CLASS_NAME, 'progress'))
                             )
                             while progress.text != '100%':
                                 time.sleep(5)
@@ -226,7 +226,7 @@ def main(data=DATA):
 
                         logging.info('Reverting editor for alpha')
                         for _ in range(len(my_alpha) + 10):
-                           alpha.send_keys(Keys.BACK_SPACE)
+                            alpha.send_keys(Keys.BACK_SPACE)
                         time.sleep(max(5, 0.08*len(my_alpha)))
 
 
