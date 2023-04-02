@@ -39,6 +39,7 @@ def main(data=DATA):
 
     logging.info('Getting webdriver')
     options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
