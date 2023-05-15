@@ -16,6 +16,7 @@ alpha_params = {
     'is.turnover>':     0.01,
     'is.turnover<':     0.7,
     'is.fitness<':      1,
+    'dateCreated>':     '2023-05-14T00:00:00-04:00',
     'order':            '-dateCreated',
     'hidden':           'false'
 }

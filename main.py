@@ -64,6 +64,7 @@ class WQSession(requests.Session):
                                 })
                                 nxt = r.headers['Location']
                                 logging.info(f'Obtained simulation link: {nxt}')
+                                ok = True
                                 while True:
                                     time.sleep(2.5)
                                     r = self.get(nxt).json()
@@ -71,26 +72,33 @@ class WQSession(requests.Session):
                                         alpha_link = r['alpha']
                                         break
                                     try:    logging.info(f"Waiting for simulation to end ({int(100*r['progress'])}%)")
-                                    except: logging.info(r['message'])
-                                r = self.get(f'https://api.worldquantbrain.com/alphas/{alpha_link}').json()
-                                passed = 0
-                                for check in r['is']['checks']:
-                                    passed += check['result'] == 'PASS'
-                                    if check['name'] == 'CONCENTRATED_WEIGHT':
-                                        weight_check = check['result']
-                                    if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
-                                        subsharpe = check['value']
-                                row = [
-                                    alpha, passed,
-                                    neutralization, decay, truncation,
-                                    r['is']['sharpe'],
-                                    r['is']['fitness'],
-                                    100*r['is']['turnover'],
-                                    weight_check,
-                                    subsharpe,
-                                    -1
-                                ]
-                                logging.info(f"{passed}/7 test cases passed!")
+                                    except: ok = False; break
+                                if not ok:
+                                    row = [
+                                        alpha, 0,
+                                        neutralization, decay, truncation,
+                                        0, 0, 0, 'FAIL', 0, -1
+                                    ]
+                                else:
+                                    r = self.get(f'https://api.worldquantbrain.com/alphas/{alpha_link}').json()
+                                    passed = 0
+                                    for check in r['is']['checks']:
+                                        passed += check['result'] == 'PASS'
+                                        if check['name'] == 'CONCENTRATED_WEIGHT':
+                                            weight_check = check['result']
+                                        if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
+                                            subsharpe = check['value']
+                                    row = [
+                                        alpha, passed,
+                                        neutralization, decay, truncation,
+                                        r['is']['sharpe'],
+                                        r['is']['fitness'],
+                                        round(100*r['is']['turnover'],2),
+                                        weight_check,
+                                        subsharpe,
+                                        -1
+                                    ]
+                                    logging.info(f"{passed}/7 test cases passed!")
                                 writer.writerow(row)
                                 f.flush()
                                 logging.info('Result added to CSV!')
