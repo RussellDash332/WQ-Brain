@@ -14,8 +14,8 @@ alpha_params = {
     'stage':            'ISOS',
     'is.sharpe>':       1.25,
     'is.turnover>':     0.01,
+    'is.turnover<':     0.7,
     'is.fitness<':      1,
-    'dateCreated>':     '2023-05-14T00:00:00-04:00',
     'order':            '-dateCreated',
     'hidden':           'false'
 }
@@ -40,4 +40,4 @@ while True:
         print(ret[-1], flush=True)
     alpha_params['offset'] += alpha_params['limit']
     r = wq.get('https://api.worldquantbrain.com/users/self/alphas', params=alpha_params).json()
-pd.DataFrame(result).to_csv(f'alpha_scrape_result_{time.time()}.csv', index=False)
+pd.DataFrame(ret).to_csv(f'alpha_scrape_result_{time.time()}.csv', index=False)
