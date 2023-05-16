@@ -31,14 +31,13 @@ while True:
     for result in r['results']:
         aid = result['id']
         passed = sum(check['result'] == 'PASS' for check in result['is']['checks'])
-        if passed != 7: continue
         while True:
             compare_r = wq.get(f'https://api.worldquantbrain.com/teams/{team_id}/alphas/{aid}/before-and-after-performance')
             if compare_r.content: break
             time.sleep(2.5)
         ret.append(compare_r.json()['score'])
-        ret[-1]['link'] = f'https://platform.worldquantbrain.com/alpha/{aid}'
+        ret[-1]['link'], ret[-1]['passed'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed
         print(ret[-1], flush=True)
     alpha_params['offset'] += alpha_params['limit']
     r = wq.get('https://api.worldquantbrain.com/users/self/alphas', params=alpha_params).json()
-pd.DataFrame(ret).to_csv(f'alpha_scrape_result_{time.time()}.csv', index=False)
+pd.DataFrame(ret).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
