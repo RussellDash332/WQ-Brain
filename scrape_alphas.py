@@ -8,23 +8,14 @@ team_params = {
     'order':                '-dateCreated'
 }
 
-alpha_params = {
-    'limit':            30,
-    'offset':           0,
-    'stage':            'ISOS',
-    'is.sharpe>':       1.25,
-    'is.turnover>':     0.01,
-    'is.turnover<':     0.7,
-    'is.fitness<':      1,
-    'dateCreated>':     '2023-05-14T00:00:00-04:00',
-    'order':            '-dateCreated',
-    'hidden':           'false'
-}
+OFFSET, LIMIT = 0, 30
+def get_link(x):
+    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&order=-dateCreated&hidden=false'
 
 wq = WQSession()
 r = wq.get('https://api.worldquantbrain.com/users/self/teams', params=team_params).json()
 team_id = r['results'][0]['id']
-r = wq.get('https://api.worldquantbrain.com/users/self/alphas', params=alpha_params).json()
+r = wq.get(get_link(OFFSET)).json()
 ret = []
 while True:
     for result in r['results']:
@@ -38,7 +29,7 @@ while True:
         ret.append(compare_r.json()['score'])
         ret[-1]['link'], ret[-1]['passed'], ret[-1]['alpha'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed, alpha
         print(ret[-1], flush=True)
-    alpha_params['offset'] += alpha_params['limit']
+    OFFSET += LIMIT
     if not r['next']: break
-    r = wq.get('https://api.worldquantbrain.com/users/self/alphas', params=alpha_params).json()
+    r = wq.get(get_link(OFFSET)).json()
 pd.DataFrame(ret).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
