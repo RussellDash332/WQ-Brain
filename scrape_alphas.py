@@ -29,6 +29,7 @@ ret = []
 while True:
     if not r['next']: break
     for result in r['results']:
+        alpha = result['regular']['code']
         aid = result['id']
         passed = sum(check['result'] == 'PASS' for check in result['is']['checks'])
         while True:
@@ -36,7 +37,7 @@ while True:
             if compare_r.content: break
             time.sleep(2.5)
         ret.append(compare_r.json()['score'])
-        ret[-1]['link'], ret[-1]['passed'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed
+        ret[-1]['link'], ret[-1]['passed'], ret[-1]['alpha'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed, alpha
         print(ret[-1], flush=True)
     alpha_params['offset'] += alpha_params['limit']
     r = wq.get('https://api.worldquantbrain.com/users/self/alphas', params=alpha_params).json()
