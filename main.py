@@ -51,7 +51,7 @@ class WQSession(requests.Session):
                                         "nanHandling":"OFF",
                                         "instrumentType":"EQUITY",
                                         "delay":delay,
-                                        "universe":"TOP3000",
+                                        "universe":"TOP1000",
                                         "truncation":truncation,
                                         "unitHandling":"VERIFY",
                                         "pasteurization":"ON",
