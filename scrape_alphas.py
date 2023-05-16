@@ -27,7 +27,6 @@ team_id = r['results'][0]['id']
 r = wq.get('https://api.worldquantbrain.com/users/self/alphas', params=alpha_params).json()
 ret = []
 while True:
-    if not r['next']: break
     for result in r['results']:
         alpha = result['regular']['code']
         aid = result['id']
@@ -40,5 +39,6 @@ while True:
         ret[-1]['link'], ret[-1]['passed'], ret[-1]['alpha'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed, alpha
         print(ret[-1], flush=True)
     alpha_params['offset'] += alpha_params['limit']
+    if not r['next']: break
     r = wq.get('https://api.worldquantbrain.com/users/self/alphas', params=alpha_params).json()
 pd.DataFrame(ret).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
