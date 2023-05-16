@@ -18,6 +18,15 @@ class WQSession(requests.Session):
             input('Press enter to quit...')
         logging.info('Logged in to WQBrain!')
 
+        old_get, old_post = self.get, self.post
+        def new_get(*args, **kwargs):
+            try:    return old_get(*args, **kwargs)
+            except: return new_get(*args, **kwargs)
+        def new_post(*args, **kwargs):
+            try:    return old_post(*args, **kwargs)
+            except: return new_post(*args, **kwargs)
+        self.get, self.post = new_get, new_post
+
     def simulate(self, data):
         try:
             neutralizations = data['neutralizations']
