@@ -10,7 +10,7 @@ team_params = {
 
 OFFSET, LIMIT = 0, 30
 def get_link(x):
-    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&order=-dateCreated&hidden=false'
+    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&order=-dateCreated&hidden=false'
 
 wq = WQSession()
 r = wq.get('https://api.worldquantbrain.com/users/self/teams', params=team_params).json()
