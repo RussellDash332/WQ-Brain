@@ -36,4 +36,4 @@ try:
         r = wq.get(get_link(OFFSET)).json()
 except:
     pass
-pd.DataFrame(ret).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
+pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
