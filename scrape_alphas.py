@@ -34,13 +34,16 @@ try:
                 corr_r = wq.get(f'https://api.worldquantbrain.com/alphas/{aid}/correlations/self')
                 if corr_r.content: break
                 time.sleep(2.5)
-            ret[-1]['max_corr'] = max(record[5] for record in corr_r.json()['records'])
+            try:
+                ret[-1]['max_corr'] = max(record[5] for record in corr_r.json()['records'])
+            except:
+                ret[-1]['max_corr'] = 'THROTTLED'
             ret[-1] |= settings
             ret[-1]['link'], ret[-1]['passed'], ret[-1]['alpha'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed, alpha
             print(ret[-1], flush=True)
         OFFSET += LIMIT
         if not r['next']: break
         r = wq.get(get_link(OFFSET)).json()
-except:
-    pass
+except Exception as e:
+    print(f'{type(e).__name__}: {e}')
 pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
