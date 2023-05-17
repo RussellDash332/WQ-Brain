@@ -21,6 +21,7 @@ try:
     while True:
         for result in r['results']:
             alpha = result['regular']['code']
+            settings = result['settings']
             aid = result['id']
             passed = sum(check['result'] == 'PASS' for check in result['is']['checks'])
             if passed != 7: continue
@@ -34,6 +35,7 @@ try:
                 if corr_r.content: break
                 time.sleep(2.5)
             ret[-1]['max_corr'] = max(record[5] for record in corr_r.json()['records'])
+            ret[-1] |= settings
             ret[-1]['link'], ret[-1]['passed'], ret[-1]['alpha'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed, alpha
             print(ret[-1], flush=True)
         OFFSET += LIMIT
