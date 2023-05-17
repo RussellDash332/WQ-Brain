@@ -1,4 +1,5 @@
-import csv, json
+import csv
+import base64
 import logging
 import requests
 import json
@@ -12,7 +13,9 @@ class WQSession(requests.Session):
         super().__init__()
         with open(json_fn, 'r') as f:
             creds = json.loads(f.read())
-            r = self.post('https://api.worldquantbrain.com/authentication', headers=creds['headers'])
+            email, password = creds['email'], creds['password']
+            b64_auth = base64.b64encode(f'{email}:{password}'.encode('ascii')).decode('ascii')
+            r = self.post('https://api.worldquantbrain.com/authentication', headers={'Authorization': f'Basic {b64_auth}'})
         if 'user' not in r.json():
             print(f'WARNING! {r.json()}')
             input('Press enter to quit...')
