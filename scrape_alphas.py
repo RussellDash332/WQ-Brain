@@ -29,7 +29,9 @@ try:
                 compare_r = wq.get(f'https://api.worldquantbrain.com/teams/{team_id}/alphas/{aid}/before-and-after-performance')
                 if compare_r.content: break
                 time.sleep(2.5)
-            ret.append(compare_r.json()['score'])
+            score = compare_r.json()['score']
+            if score['after'] <= score['before']: continue
+            ret.append(score)
             while True:
                 corr_r = wq.get(f'https://api.worldquantbrain.com/alphas/{aid}/correlations/self')
                 if corr_r.content: break
@@ -39,7 +41,7 @@ try:
             except:
                 ret[-1]['max_corr'] = 'THROTTLED'
             ret[-1] |= settings
-            ret[-1]['link'], ret[-1]['passed'], ret[-1]['alpha'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed, alpha
+            ret[-1]['passed'], ret[-1]['alpha'], ret[-1]['link'] = passed, alpha, f'https://platform.worldquantbrain.com/alpha/{aid}'
             print(ret[-1], flush=True)
         OFFSET += LIMIT
         if not r['next']: break
