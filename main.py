@@ -53,25 +53,31 @@ class WQSession(requests.Session):
                             for alpha in alphas:
                                 logging.info(f'Simulating alpha: {alpha}')
                                 logging.info('Waiting for simulation to end (0%)')
-                                r = self.post('https://api.worldquantbrain.com/simulations', json={
-                                    'regular': alpha,
-                                    'type': 'REGULAR',
-                                    'settings': {
-                                        "nanHandling":"OFF",
-                                        "instrumentType":"EQUITY",
-                                        "delay":delay,
-                                        "universe":"TOP1000",
-                                        "truncation":truncation,
-                                        "unitHandling":"VERIFY",
-                                        "pasteurization":"ON",
-                                        "region":"USA",
-                                        "language":"FASTEXPR",
-                                        "decay":decay,
-                                        "neutralization":neutralization.upper(),
-                                        "visualization":False
-                                    }
-                                })
-                                nxt = r.headers['Location']
+                                while True:
+                                    # keep sending a post request until the simulation link is found
+                                    try:
+                                        r = self.post('https://api.worldquantbrain.com/simulations', json={
+                                            'regular': alpha,
+                                            'type': 'REGULAR',
+                                            'settings': {
+                                                "nanHandling":"OFF",
+                                                "instrumentType":"EQUITY",
+                                                "delay":delay,
+                                                "universe":"TOP1000",
+                                                "truncation":truncation,
+                                                "unitHandling":"VERIFY",
+                                                "pasteurization":"ON",
+                                                "region":"USA",
+                                                "language":"FASTEXPR",
+                                                "decay":decay,
+                                                "neutralization":neutralization.upper(),
+                                                "visualization":False
+                                            }
+                                        })
+                                        nxt = r.headers['Location']
+                                        break
+                                    except:
+                                        pass
                                 logging.info(f'Obtained simulation link: {nxt}')
                                 ok = True
                                 while True:
