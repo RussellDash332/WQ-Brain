@@ -28,6 +28,7 @@ class WQSession(requests.Session):
         self.get, self.post = new_get, new_post
 
     def simulate(self, data):
+        universe_top = 500
         try:
             neutralizations = data['neutralizations']
             decays = data['decays']
@@ -36,7 +37,7 @@ class WQSession(requests.Session):
             alphas = data['alphas']
 
             logging.info('Creating CSV file')
-            csv_file = f'api_D{delay}_{int(time.time())}.csv'
+            csv_file = f'api_D{delay}_{int(time.time())}_TOP{universe_top}.csv'
             with open(csv_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 header = [
@@ -63,7 +64,7 @@ class WQSession(requests.Session):
                                                 "nanHandling":"OFF",
                                                 "instrumentType":"EQUITY",
                                                 "delay":delay,
-                                                "universe":"TOP1000",
+                                                "universe":f"TOP{universe_top}",
                                                 "truncation":truncation,
                                                 "unitHandling":"VERIFY",
                                                 "pasteurization":"ON",
