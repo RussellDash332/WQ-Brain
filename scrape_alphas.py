@@ -29,6 +29,11 @@ try:
                 if compare_r.content: break
                 time.sleep(2.5)
             ret.append(compare_r.json()['score'])
+            while True:
+                corr_r = wq.get(f'https://api.worldquantbrain.com/alphas/{aid}/correlations/self')
+                if corr_r.content: break
+                time.sleep(2.5)
+            ret[-1]['max_corr'] = max(record[5] for record in corr_r.json()['records'])
             ret[-1]['link'], ret[-1]['passed'], ret[-1]['alpha'] = f'https://platform.worldquantbrain.com/alpha/{aid}', passed, alpha
             print(ret[-1], flush=True)
         OFFSET += LIMIT
