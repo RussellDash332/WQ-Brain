@@ -37,7 +37,9 @@ try:
                 if corr_r.content: break
                 time.sleep(2.5)
             try:
-                ret[-1]['max_corr'] = max(record[5] for record in corr_r.json()['records'])
+                max_corr = max(record[5] for record in corr_r.json()['records'])
+                if max_corr >= 0.8: ret.oop(); continue
+                ret[-1]['max_corr'] = max_corr
             except:
                 ret[-1]['max_corr'] = 'THROTTLED'
             ret[-1] |= settings
