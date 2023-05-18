@@ -12,7 +12,7 @@ team_params = {
     'order':                '-dateCreated'
 }
 
-OFFSET, LIMIT = 0, 1000
+OFFSET, LIMIT = 0, 30
 def get_link(x):
     return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&dateCreated%3E=2023-05-16T00:00:00-04:00&order=-dateCreated&hidden=false'
 
@@ -26,18 +26,16 @@ def scrape(result):
     aid = result['id']
     passed = sum(check['result'] == 'PASS' for check in result['is']['checks'])
     failed = sum(check['result'] in ['FAIL', 'ERROR'] for check in result['is']['checks'])
-    if failed != 0:
-        logging.info(f'Skipping alpha due to failure')
-        return -1
+    if failed != 0: return -1
 
     # score check
     while True:
         compare_r = wq.get(f'https://api.worldquantbrain.com/teams/{team_id}/alphas/{aid}/before-and-after-performance')
-        if compare_r.content: break
+        if compare_r.content:
+            try:    score = compare_r.json()['score']; break
+            except: pass
         time.sleep(2.5)
-    score = compare_r.json()['score']
-    if score['after'] <= score['before']:
-        return -1
+    if score['after'] <= score['before']: return -1
 
     # correlation check, prone to throttling
     while True:
@@ -46,12 +44,13 @@ def scrape(result):
             try:
                 max_corr = max(record[5] for record in corr_r.json()['records'])
                 if max_corr > 0.7:
-                    logging.info(f'Skipping alpha due to high correlation')
+                    logging.info(f'Skipping alpha due to high correlation of {max_corr}')
                     return -1
                 score['max_corr'] = max_corr
                 break
             except:
-                logging.info('Correlation check throttled')
+                try:    logging.info(f'Correlation check throttled: {corr_r.json()}')
+                except: logging.info(f'Issue found when checking correlation: {corr_r.content}')
                 time.sleep(5)
         else:
             time.sleep(2.5)
@@ -59,7 +58,7 @@ def scrape(result):
     # merge everything else
     score |= settings
     score['passed'], score['alpha'], score['link'] = passed, alpha, f'https://platform.worldquantbrain.com/alpha/{aid}'
-    logging.info(score)
+    logging.info(f'Success!\n{score}')
     return score
 
 ret = []
@@ -67,12 +66,14 @@ with ThreadPoolExecutor(max_workers=6) as executor:
     try:
         while True:
             r = wq.get(get_link(OFFSET)).json()
+            logging.info(f'Obtained data of alphas #{OFFSET+1}-#{OFFSET+LIMIT}')
             for f in as_completed([executor.submit(scrape, result) for result in r['results']]):
                 res = f.result()
                 if res != -1: ret.append(res)
             OFFSET += LIMIT
             if not r['next']: break
-            r = wq.get(get_link(OFFSET)).json()
     except Exception as e:
-        print(f'{type(e).__name__}: {e}')
+        logging.info(f'{type(e).__name__}: {e}')
+        try:    logging.info(r.content)
+        except: pass
 pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
