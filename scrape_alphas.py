@@ -24,7 +24,8 @@ try:
             settings = result['settings']
             aid = result['id']
             passed = sum(check['result'] == 'PASS' for check in result['is']['checks'])
-            if passed != 7: continue
+            failed = sum(check['result'] in ['FAIL', 'ERROR'] for check in result['is']['checks'])
+            if failed != 0: continue
             while True:
                 compare_r = wq.get(f'https://api.worldquantbrain.com/teams/{team_id}/alphas/{aid}/before-and-after-performance')
                 if compare_r.content: break
