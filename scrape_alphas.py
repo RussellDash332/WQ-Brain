@@ -1,6 +1,7 @@
 from main import WQSession
 import time
 import logging
+import csv
 import pandas as pd
 from concurrent.futures import as_completed, ThreadPoolExecutor
 
@@ -49,9 +50,10 @@ def scrape(result):
                 score['max_corr'] = max_corr
                 break
             except:
-                try:    logging.info(f'Correlation check throttled: {corr_r.json()}')
+                try:    logging.info(f'Correlation check throttled(?): {corr_r.json()}')
                 except: logging.info(f'Issue found when checking correlation: {corr_r.content}')
-                time.sleep(5)
+                score['max_corr'] = -1
+                break
         else:
             time.sleep(2.5)
 
@@ -62,18 +64,25 @@ def scrape(result):
     return score
 
 ret = []
-with ThreadPoolExecutor(max_workers=6) as executor:
-    try:
-        while True:
-            r = wq.get(get_link(OFFSET)).json()
-            logging.info(f'Obtained data of alphas #{OFFSET+1}-#{OFFSET+LIMIT}')
-            for f in as_completed([executor.submit(scrape, result) for result in r['results']]):
-                res = f.result()
-                if res != -1: ret.append(res)
-            OFFSET += LIMIT
-            if not r['next']: break
-    except Exception as e:
-        logging.info(f'{type(e).__name__}: {e}')
-        try:    logging.info(r.content)
-        except: pass
+with open(f'alpha_scrape_result_{int(time.time())}_temp.csv', 'w', newline='') as c:
+    writer = csv.DictWriter(c, fieldnames='before,after,max_corr,instrumentType,region,universe,delay,decay,neutralization,truncation,pasteurization,unitHandling,nanHandling,language,visualization,passed,alpha,link'.split(','))
+    writer.writeheader()
+    c.flush()
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        try:
+            while True:
+                r = wq.get(get_link(OFFSET)).json()
+                logging.info(f'Obtained data of alphas #{OFFSET+1}-#{OFFSET+LIMIT}')
+                for f in as_completed([executor.submit(scrape, result) for result in r['results']]):
+                    res = f.result()
+                    if res != -1:
+                        ret.append(res)
+                        writer.writerow(res)
+                        c.flush()
+                OFFSET += LIMIT
+                if not r['next']: break
+        except Exception as e:
+            logging.info(f'{type(e).__name__}: {e}')
+            try:    logging.info(r.content)
+            except: pass
 pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
