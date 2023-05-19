@@ -68,7 +68,7 @@ with open(f'alpha_scrape_result_{int(time.time())}_temp.csv', 'w', newline='') a
     writer = csv.DictWriter(c, fieldnames='before,after,max_corr,instrumentType,region,universe,delay,decay,neutralization,truncation,pasteurization,unitHandling,nanHandling,language,visualization,passed,alpha,link'.split(','))
     writer.writeheader()
     c.flush()
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor:
         try:
             while True:
                 r = wq.get(get_link(OFFSET)).json()
