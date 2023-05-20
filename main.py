@@ -11,16 +11,8 @@ logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %
 class WQSession(requests.Session):
     def __init__(self, json_fn='credentials.json'):
         super().__init__()
-        with open(json_fn, 'r') as f:
-            creds = json.loads(f.read())
-            email, password = creds['email'], creds['password']
-            b64_auth = base64.b64encode(f'{email}:{password}'.encode('ascii')).decode('ascii')
-            r = self.post('https://api.worldquantbrain.com/authentication', headers={'Authorization': f'Basic {b64_auth}'})
-        if 'user' not in r.json():
-            print(f'WARNING! {r.json()}')
-            input('Press enter to quit...')
-        logging.info('Logged in to WQBrain!')
-
+        self.json_fn = json_fn
+        self.login()
         old_get, old_post = self.get, self.post
         def new_get(*args, **kwargs):
             try:    return old_get(*args, **kwargs)
@@ -29,6 +21,17 @@ class WQSession(requests.Session):
             try:    return old_post(*args, **kwargs)
             except: return new_post(*args, **kwargs)
         self.get, self.post = new_get, new_post
+
+    def login(self):
+        with open(self.json_fn, 'r') as f:
+            creds = json.loads(f.read())
+            email, password = creds['email'], creds['password']
+            b64_auth = base64.b64encode(f'{email}:{password}'.encode('ascii')).decode('ascii')
+            r = self.post('https://api.worldquantbrain.com/authentication', headers={'Authorization': f'Basic {b64_auth}'})
+        if 'user' not in r.json():
+            print(f'WARNING! {r.json()}')
+            input('Press enter to quit...')
+        logging.info('Logged in to WQBrain!')
 
     def simulate(self, data):
         try:
@@ -41,7 +44,7 @@ class WQSession(requests.Session):
 
             for delay in delays:
                 logging.info('Creating CSV file')
-                csv_file = f'api_D{delay}_{int(time.time())}.csv'
+                csv_file = f"api_D{delay}_{str(time.time()).replace('.', '_')}.csv"
                 with open(csv_file, 'w', newline='') as f:
                     writer = csv.writer(f)
                     header = [
@@ -83,8 +86,12 @@ class WQSession(requests.Session):
                                                 nxt = r.headers['Location']
                                                 break
                                             except:
-                                                logging.info(r.content)
-                                                pass
+                                                try:
+                                                    if 'credentials' in r.json()['details']:
+                                                        self.login() # maybe expired credentials
+                                                except:
+                                                    logging.info(r.content)
+                                                    break
                                         logging.info(f'Obtained simulation link: {nxt}')
                                         ok = True
                                         while True:
