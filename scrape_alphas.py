@@ -85,4 +85,7 @@ with open(f'alpha_scrape_result_{int(time.time())}_temp.csv', 'w', newline='') a
             logging.info(f'{type(e).__name__}: {e}')
             try:    logging.info(r.content)
             except: pass
-pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
+if ret:
+    pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
+else:
+    print('No luck :)')
