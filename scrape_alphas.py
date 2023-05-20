@@ -14,6 +14,7 @@ team_params = {
 }
 
 OFFSET, LIMIT = 0, 30
+SCRAPE_FN = f'alpha_scrape_result_{int(time.time())}.csv'
 def get_link(x):
     return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&dateCreated%3E=2023-05-19T00:00:00-04:00&order=-dateCreated&hidden=false'
 
@@ -64,7 +65,7 @@ def scrape(result):
     return score
 
 ret = []
-with open(f'alpha_scrape_result_{int(time.time())}_temp.csv', 'w', newline='') as c:
+with open(SCRAPE_FN, 'w', newline='') as c:
     writer = csv.DictWriter(c, fieldnames='before,after,max_corr,instrumentType,region,universe,delay,decay,neutralization,truncation,pasteurization,unitHandling,nanHandling,language,visualization,passed,alpha,link'.split(','))
     writer.writeheader()
     c.flush()
@@ -86,6 +87,6 @@ with open(f'alpha_scrape_result_{int(time.time())}_temp.csv', 'w', newline='') a
             try:    logging.info(r.content)
             except: pass
 if ret:
-    pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(f'alpha_scrape_result_{int(time.time())}.csv', index=False)
+    pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(SCRAPE_FN, index=False)
 else:
     print('No luck :)')
