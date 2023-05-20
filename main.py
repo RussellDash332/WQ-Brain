@@ -87,7 +87,7 @@ class WQSession(requests.Session):
                                                 break
                                             except:
                                                 try:
-                                                    if 'credentials' in r.json()['details']:
+                                                    if 'credentials' in r.json()['detail']:
                                                         self.login() # maybe expired credentials
                                                 except:
                                                     logging.info(r.content)
