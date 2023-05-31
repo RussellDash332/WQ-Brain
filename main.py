@@ -50,7 +50,7 @@ class WQSession(requests.Session):
             truncation = simulation.get('truncation', 0.1)
             region = simulation.get('region', 'USA')
             decay = simulation.get('decay', 6)
-            neutralization = simulation.get('neutralization', 'SUBINDUSTRY')
+            neutralization = simulation.get('neutralization', 'SUBINDUSTRY').upper()
             pasteurization = simulation.get('pasteurization', 'ON')
             nan = simulation.get('nanHandling', 'OFF')
             logging.info(f"{thread} -- Simulating alpha: {alpha}")
@@ -71,7 +71,7 @@ class WQSession(requests.Session):
                             "region":region,
                             "language":"FASTEXPR",
                             "decay":decay,
-                            "neutralization":neutralization.upper(),
+                            "neutralization":neutralization,
                             "visualization":False
                         }
                     })
