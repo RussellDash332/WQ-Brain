@@ -1,11 +1,12 @@
-from commands import *
+from commands import sample_1
 
 # Just a sample
-DATA = {
-    'neutralizations': ['Subindustry', 'Industry', 'Sector', 'Market'],
-    'decays': [10],
-    'truncations': [0.1],
-    'delays': [0, 1],
-    'universes': ['TOP200', 'TOP500', 'TOP1000', 'TOP3000'],
-    'alphas': sample_1() + from_wq_2() + sample_2()
-}
+DATA = [{
+    'neutralization': 'SUBINDUSTRY',
+    'decay': 10,
+    'truncation': 0.1,
+    'delay': 1,
+    'universe': 'TOP3000',
+    'region': 'USA',
+    'code': alpha
+} for alpha in sample_1()]

@@ -5,6 +5,8 @@ import requests
 import json
 import time
 from parameters import DATA
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import current_thread
 
 logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s')
 
@@ -21,6 +23,8 @@ class WQSession(requests.Session):
             try:    return old_post(*args, **kwargs)
             except: return new_post(*args, **kwargs)
         self.get, self.post = new_get, new_post
+        self.login_expired = False
+        self.rows_processed = 0
 
     def login(self):
         with open(self.json_fn, 'r') as f:
@@ -34,109 +38,121 @@ class WQSession(requests.Session):
         logging.info('Logged in to WQBrain!')
 
     def simulate(self, data):
+        self.rows_processed = 0
+
+        def process_simulation(writer, f, simulation):
+            if self.login_expired: return # expired crendentials
+
+            thread = current_thread().name
+            alpha = simulation['code'].replace('\n', ';').replace(';;', ';')
+            delay = simulation.get('delay', 1)
+            universe = simulation.get('universe', 'TOP3000')
+            truncation = simulation.get('truncation', 0.1)
+            region = simulation.get('region', 'USA')
+            decay = simulation.get('decay', 6)
+            neutralization = simulation.get('neutralization', 'SUBINDUSTRY')
+            pasteurization = simulation.get('pasteurization', 'ON')
+            nan = simulation.get('nanHandling', 'OFF')
+            logging.info(f"{thread} -- Simulating alpha: {alpha}")
+            while True:
+                # keep sending a post request until the simulation link is found
+                try:
+                    r = self.post('https://api.worldquantbrain.com/simulations', json={
+                        'regular': alpha,
+                        'type': 'REGULAR',
+                        'settings': {
+                            "nanHandling":nan,
+                            "instrumentType":"EQUITY",
+                            "delay":delay,
+                            "universe":universe,
+                            "truncation":truncation,
+                            "unitHandling":"VERIFY",
+                            "pasteurization":pasteurization,
+                            "region":region,
+                            "language":"FASTEXPR",
+                            "decay":decay,
+                            "neutralization":neutralization.upper(),
+                            "visualization":False
+                        }
+                    })
+                    nxt = r.headers['Location']
+                    break
+                except:
+                    try:
+                        if 'credentials' in r.json()['detail']:
+                            self.login_expired = True
+                            return # debugging WIP
+                    except:
+                        logging.info(f'{thread} -- {r.content}')
+                        break
+            logging.info(f'{thread} -- Obtained simulation link: {nxt}')
+            ok = True
+            while True:
+                r = self.get(nxt).json()
+                if 'alpha' in r:
+                    alpha_link = r['alpha']
+                    break
+                try:
+                    logging.info(f"{thread} -- Waiting for simulation to end ({int(100*r['progress'])}%)")
+                except Exception as e:
+                    ok = (False, r['message']); break
+                time.sleep(10)
+            if ok != True:
+                logging.info(f'{thread} -- Issue when sending simulation request: {ok[1]}')
+                row = [
+                    0, delay, region,
+                    neutralization, decay, truncation,
+                    0, 0, 0, 'FAIL', 0, -1, universe, alpha
+                ]
+            else:
+                r = self.get(f'https://api.worldquantbrain.com/alphas/{alpha_link}').json()
+                logging.info(f'{thread} -- Obtained alpha link: https://api.worldquantbrain.com/alphas/{alpha_link}')
+                passed = 0
+                for check in r['is']['checks']:
+                    passed += check['result'] == 'PASS'
+                    if check['name'] == 'CONCENTRATED_WEIGHT':
+                        weight_check = check['result']
+                    if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
+                        subsharpe = check['value']
+                try:    subsharpe
+                except: subsharpe = -1
+                row = [
+                    passed, delay, region,
+                    neutralization, decay, truncation,
+                    r['is']['sharpe'],
+                    r['is']['fitness'],
+                    round(100*r['is']['turnover'], 2),
+                    weight_check, subsharpe, -1,
+                    universe, alpha
+                ]
+            writer.writerow(row)
+            f.flush()
+            self.rows_processed += 1
+            logging.info(f'{thread} -- Result added to CSV!')
+
         try:
-            neutralizations = data['neutralizations']
-            decays = data['decays']
-            truncations = data['truncations']
-            delays = data['delays']
-            universes = data['universes']
-            alphas = data['alphas']
-
-            for delay in delays:
-                logging.info('Creating CSV file')
-                csv_file = f"api_D{delay}_{str(time.time()).replace('.', '_')}.csv"
-                with open(csv_file, 'w', newline='') as f:
-                    writer = csv.writer(f)
-                    header = [
-                        'command', 'passed', 'neutralization', 'decay', 'truncation',
-                        'sharpe', 'fitness', 'turnover', 'weight',
-                        'subsharpe', 'correlation', 'universe'
-                    ]
-                    writer.writerow(header)
-                    f.flush()
-
-                    for neutralization in neutralizations:
-                        for decay in decays:
-                            for truncation in truncations:
-                                for universe in universes:
-                                    for alpha in alphas:
-                                        logging.info(f'Simulating alpha: {alpha}')
-                                        logging.info('Waiting for simulation to end (0%)')
-                                        while True:
-                                            # keep sending a post request until the simulation link is found
-                                            try:
-                                                r = self.post('https://api.worldquantbrain.com/simulations', json={
-                                                    'regular': alpha,
-                                                    'type': 'REGULAR',
-                                                    'settings': {
-                                                        "nanHandling":"OFF",
-                                                        "instrumentType":"EQUITY",
-                                                        "delay":delay,
-                                                        "universe":universe,
-                                                        "truncation":truncation,
-                                                        "unitHandling":"VERIFY",
-                                                        "pasteurization":"ON",
-                                                        "region":"USA",
-                                                        "language":"FASTEXPR",
-                                                        "decay":decay,
-                                                        "neutralization":neutralization.upper(),
-                                                        "visualization":False
-                                                    }
-                                                })
-                                                nxt = r.headers['Location']
-                                                break
-                                            except:
-                                                try:
-                                                    if 'credentials' in r.json()['detail']:
-                                                        self.login() # maybe expired credentials
-                                                except:
-                                                    logging.info(r.content)
-                                                    break
-                                        logging.info(f'Obtained simulation link: {nxt}')
-                                        ok = True
-                                        while True:
-                                            time.sleep(5)
-                                            r = self.get(nxt).json()
-                                            if 'alpha' in r:
-                                                alpha_link = r['alpha']
-                                                break
-                                            try:    logging.info(f"Waiting for simulation to end ({int(100*r['progress'])}%)")
-                                            except: ok = False; break
-                                        if not ok:
-                                            row = [
-                                                alpha, 0,
-                                                neutralization, decay, truncation,
-                                                0, 0, 0, 'FAIL', 0, -1, universe
-                                            ]
-                                        else:
-                                            r = self.get(f'https://api.worldquantbrain.com/alphas/{alpha_link}').json()
-                                            passed = 0
-                                            for check in r['is']['checks']:
-                                                passed += check['result'] == 'PASS'
-                                                if check['name'] == 'CONCENTRATED_WEIGHT':
-                                                    weight_check = check['result']
-                                                if check['name'] == 'LOW_SUB_UNIVERSE_SHARPE':
-                                                    subsharpe = check['value']
-                                            try:    subsharpe
-                                            except: subsharpe = -1
-                                            row = [
-                                                alpha, passed,
-                                                neutralization, decay, truncation,
-                                                r['is']['sharpe'],
-                                                r['is']['fitness'],
-                                                round(100*r['is']['turnover'], 2),
-                                                weight_check,
-                                                subsharpe,
-                                                -1,
-                                                universe
-                                            ]
-                                            logging.info(row[1:])
-                                        writer.writerow(row)
-                                        f.flush()
-                                        logging.info('Result added to CSV!')
+            logging.info('Creating CSV file')
+            csv_file = f"api_{str(time.time()).replace('.', '_')}.csv"
+            with open(csv_file, 'w', newline='') as f:
+                writer = csv.writer(f)
+                header = [
+                    'passed', 'delay', 'region', 'neutralization', 'decay', 'truncation',
+                    'sharpe', 'fitness', 'turnover', 'weight',
+                    'subsharpe', 'correlation', 'universe', 'code'
+                ]
+                writer.writerow(header)
+                with ThreadPoolExecutor(max_workers=10) as executor: # 10 threads, only 3 can go in concurrently so this is no harm
+                    _ = executor.map(lambda sim: process_simulation(writer, f, sim), data)
         except Exception as e:
-            print(e)
-            input('Press enter to quit...')
+            logging.info(f'Issue occurred! {type(e).__name__}: {e}')
+        return self.rows_processed
 
 if __name__ == '__main__':
-    WQSession().simulate(DATA)
+    TOTAL_ROWS = len(DATA)
+    CURR_ROWS = 0
+    while CURR_ROWS < TOTAL_ROWS:
+        wq = WQSession()
+        logging.info(f'{CURR_ROWS}/{TOTAL_ROWS} alpha simulations...')
+        rows = wq.simulate(DATA)
+        DATA = DATA[CURR_ROWS:]
+        CURR_ROWS += rows
