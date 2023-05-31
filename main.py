@@ -102,11 +102,12 @@ class WQSession(requests.Session):
                 row = [
                     0, delay, region,
                     neutralization, decay, truncation,
-                    0, 0, 0, 'FAIL', 0, -1, universe, alpha
+                    0, 0, 0, 'FAIL', 0, -1, universe, nxt, alpha
                 ]
             else:
-                r = self.get(f'https://api.worldquantbrain.com/alphas/{alpha_link}').json()
-                logging.info(f'{thread} -- Obtained alpha link: https://api.worldquantbrain.com/alphas/{alpha_link}')
+                final_link = f'https://api.worldquantbrain.com/alphas/{alpha_link}'
+                r = self.get(final_link).json()
+                logging.info(f'{thread} -- Obtained alpha link: {final_link}')
                 passed = 0
                 for check in r['is']['checks']:
                     passed += check['result'] == 'PASS'
@@ -123,7 +124,7 @@ class WQSession(requests.Session):
                     r['is']['fitness'],
                     round(100*r['is']['turnover'], 2),
                     weight_check, subsharpe, -1,
-                    universe, alpha
+                    universe, final_link, alpha
                 ]
             writer.writerow(row)
             f.flush()
@@ -138,7 +139,7 @@ class WQSession(requests.Session):
                 header = [
                     'passed', 'delay', 'region', 'neutralization', 'decay', 'truncation',
                     'sharpe', 'fitness', 'turnover', 'weight',
-                    'subsharpe', 'correlation', 'universe', 'code'
+                    'subsharpe', 'correlation', 'universe', 'link', 'code'
                 ]
                 writer.writerow(header)
                 with ThreadPoolExecutor(max_workers=10) as executor: # 10 threads, only 3 can go in concurrently so this is no harm
