@@ -5,7 +5,7 @@ import requests
 import json
 import time
 from parameters import DATA
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from threading import current_thread
 
 class WQSession(requests.Session):
