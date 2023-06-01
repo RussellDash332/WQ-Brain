@@ -6,6 +6,8 @@ import pandas as pd
 from concurrent.futures import as_completed, ThreadPoolExecutor
 
 SCRAPE_FN = f'alpha_scrape_result_{int(time.time())}.csv'
+for handler in logging.root.handlers:
+    logging.root.removeHandler(handler)
 logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=SCRAPE_FN.replace('csv', 'log'))
 
 team_params = {
