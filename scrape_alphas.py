@@ -16,7 +16,8 @@ team_params = {
 OFFSET, LIMIT = 0, 30
 SCRAPE_FN = f'alpha_scrape_result_{int(time.time())}.csv'
 def get_link(x):
-    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&dateCreated%3E=2023-05-19T00:00:00-04:00&order=-dateCreated&hidden=false'
+    start_date = '2023-05-31'
+    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&dateCreated%3E={start_date}T00:00:00-04:00&order=-dateCreated&hidden=false'
 
 wq = WQSession()
 r = wq.get('https://api.worldquantbrain.com/users/self/teams', params=team_params).json()
