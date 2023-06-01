@@ -5,7 +5,8 @@ import csv
 import pandas as pd
 from concurrent.futures import as_completed, ThreadPoolExecutor
 
-logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s')
+SCRAPE_FN = f'alpha_scrape_result_{int(time.time())}.csv'
+logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=SCRAPE_FN.replace('csv', 'log'))
 
 team_params = {
     'status':               'ACTIVE',
@@ -14,7 +15,6 @@ team_params = {
 }
 
 OFFSET, LIMIT = 0, 30
-SCRAPE_FN = f'alpha_scrape_result_{int(time.time())}.csv'
 def get_link(x):
     start_date = '2023-05-31'
     return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&dateCreated%3E={start_date}T00:00:00-04:00&order=-dateCreated&hidden=false'

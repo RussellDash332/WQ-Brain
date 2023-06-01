@@ -8,11 +8,10 @@ from parameters import DATA
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import current_thread
 
-logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s')
-
 class WQSession(requests.Session):
     def __init__(self, json_fn='credentials.json'):
         super().__init__()
+        logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s')
         self.json_fn = json_fn
         self.login()
         old_get, old_post = self.get, self.post
@@ -132,8 +131,9 @@ class WQSession(requests.Session):
             logging.info(f'{thread} -- Result added to CSV!')
 
         try:
-            logging.info('Creating CSV file')
             csv_file = f"api_{str(time.time()).replace('.', '_')}.csv"
+            logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=csv_file.replace('csv', 'log'))
+            logging.info('Creating CSV file')
             with open(csv_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 header = [
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     CURR_ROWS = 0
     while CURR_ROWS < TOTAL_ROWS:
         wq = WQSession()
-        logging.info(f'{CURR_ROWS}/{TOTAL_ROWS} alpha simulations...')
+        print(f'{CURR_ROWS}/{TOTAL_ROWS} alpha simulations...')
         rows = wq.simulate(DATA)
         DATA = DATA[CURR_ROWS:]
         CURR_ROWS += rows
