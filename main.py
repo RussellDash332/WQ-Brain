@@ -11,6 +11,8 @@ from threading import current_thread
 class WQSession(requests.Session):
     def __init__(self, json_fn='credentials.json'):
         super().__init__()
+        for handler in logging.root.handlers:
+            logging.root.removeHandler(handler)
         logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s')
         self.json_fn = json_fn
         self.login()
@@ -131,6 +133,8 @@ class WQSession(requests.Session):
             logging.info(f'{thread} -- Result added to CSV!')
 
         try:
+            for handler in logging.root.handlers:
+                logging.root.removeHandler(handler)
             csv_file = f"api_{str(time.time()).replace('.', '_')}.csv"
             logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=csv_file.replace('csv', 'log'))
             logging.info('Creating CSV file')
