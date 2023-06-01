@@ -106,9 +106,8 @@ class WQSession(requests.Session):
                     0, 0, 0, 'FAIL', 0, -1, universe, nxt, alpha
                 ]
             else:
-                final_link = f'https://api.worldquantbrain.com/alphas/{alpha_link}'
-                r = self.get(final_link).json()
-                logging.info(f'{thread} -- Obtained alpha link: {final_link}')
+                r = self.get(f'https://api.worldquantbrain.com/alphas/{alpha_link}').json()
+                logging.info(f'{thread} -- Obtained alpha link: https://platform.worldquantbrain.com/alpha/{alpha_link}')
                 passed = 0
                 for check in r['is']['checks']:
                     passed += check['result'] == 'PASS'
@@ -125,7 +124,7 @@ class WQSession(requests.Session):
                     r['is']['fitness'],
                     round(100*r['is']['turnover'], 2),
                     weight_check, subsharpe, -1,
-                    universe, final_link, alpha
+                    universe, f'https://platform.worldquantbrain.com/alpha/{alpha_link}', alpha
                 ]
             writer.writerow(row)
             f.flush()
@@ -137,7 +136,7 @@ class WQSession(requests.Session):
                 logging.root.removeHandler(handler)
             csv_file = f"api_{str(time.time()).replace('.', '_')}.csv"
             logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=csv_file.replace('csv', 'log'))
-            logging.info('Creating CSV file')
+            logging.info(f'Creating CSV file: {csv_file}')
             with open(csv_file, 'w', newline='') as f:
                 writer = csv.writer(f)
                 header = [
