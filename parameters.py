@@ -1,4 +1,4 @@
-from commands import sample_1
+from commands import *
 
 # Just a sample
 DATA = [{
@@ -8,5 +8,13 @@ DATA = [{
     'delay': 1,
     'universe': 'TOP3000',
     'region': 'USA',
-    'code': alpha
-} for alpha in sample_1()]
+    'code': 'open + close'
+}, {
+    'neutralization': 'SECTOR',
+    'decay': 10,
+    'truncation': 0.1,
+    'delay': 1,
+    'universe': 'TOP3000',
+    'region': 'CHN',
+    'code': 'open - close'
+}]
