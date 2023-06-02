@@ -15,7 +15,7 @@ team_params = {
 OFFSET, LIMIT = 0, 30
 def get_link(x):
     start_date = '2023-05-31'
-    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&dateCreated%3E={start_date}T00:00:00-04:00&order=-dateCreated&hidden=false'
+    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&dateCreated%3E={start_date}T00:00:00-04:00&order=-is.sharpe&hidden=false'
 
 wq = WQSession()
 r = wq.get('https://api.worldquantbrain.com/users/self/teams', params=team_params).json()
