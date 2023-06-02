@@ -134,7 +134,7 @@ class WQSession(requests.Session):
         try:
             for handler in logging.root.handlers:
                 logging.root.removeHandler(handler)
-            csv_file = f"api_{str(time.time()).replace('.', '_')}.csv"
+            csv_file = f"data/api_{str(time.time()).replace('.', '_')}.csv"
             logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=csv_file.replace('csv', 'log'))
             logging.info(f'Creating CSV file: {csv_file}')
             with open(csv_file, 'w', newline='') as f:

@@ -25,7 +25,7 @@ def submit(row):
 
 if len(sys.argv) > 1:
     wq = WQSession()
-    logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=f'alpha_submit_result_{int(time.time())}.log')
+    logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=f'data/alpha_submit_result_{int(time.time())}.log')
     for (_, row) in pd.read_csv(sys.argv[1]).sort_values(by='after', ascending=False).iterrows():
         success = submit(row)
         if success: break

@@ -78,7 +78,7 @@ def scrape(result):
     return score
 
 ret = []
-SCRAPE_FN = f'alpha_scrape_result_{int(time.time())}.csv'
+SCRAPE_FN = f'data/alpha_scrape_result_{int(time.time())}.csv'
 for handler in logging.root.handlers:
     logging.root.removeHandler(handler)
 logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=SCRAPE_FN.replace('csv', 'log'))
