@@ -5,11 +5,6 @@ import csv
 import pandas as pd
 from concurrent.futures import as_completed, ThreadPoolExecutor
 
-SCRAPE_FN = f'alpha_scrape_result_{int(time.time())}.csv'
-for handler in logging.root.handlers:
-    logging.root.removeHandler(handler)
-logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=SCRAPE_FN.replace('csv', 'log'))
-
 team_params = {
     'status':               'ACTIVE',
     'members.self.status':  'ACCEPTED',
@@ -63,11 +58,15 @@ def scrape(result):
 
     # merge everything else
     score |= settings
-    score['passed'], score['alpha'], score['link'] = passed, alpha, f'https://platform.worldquantbrain.com/alpha/{aid}'
+    score['passed'], score['alpha'], score['link'] = passed, alpha.replace('\n', ';').replace(';;', ';').strip(), f'https://platform.worldquantbrain.com/alpha/{aid}'
     logging.info(f'Success!\n{score}')
     return score
 
 ret = []
+SCRAPE_FN = f'alpha_scrape_result_{int(time.time())}.csv'
+for handler in logging.root.handlers:
+    logging.root.removeHandler(handler)
+logging.basicConfig(encoding='utf-8', level=logging.INFO, format='%(asctime)s: %(message)s', filename=SCRAPE_FN.replace('csv', 'log'))
 with open(SCRAPE_FN, 'w', newline='') as c:
     writer = csv.DictWriter(c, fieldnames='before,after,max_corr,instrumentType,region,universe,delay,decay,neutralization,truncation,pasteurization,unitHandling,nanHandling,language,visualization,passed,alpha,link'.split(','))
     writer.writeheader()

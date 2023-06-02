@@ -25,7 +25,7 @@ class WQSession(requests.Session):
             except: return new_post(*args, **kwargs)
         self.get, self.post = new_get, new_post
         self.login_expired = False
-        self.rows_processed = 0
+        self.rows_processed = []
 
     def login(self):
         with open(self.json_fn, 'r') as f:
@@ -39,7 +39,7 @@ class WQSession(requests.Session):
         logging.info('Logged in to WQBrain!')
 
     def simulate(self, data):
-        self.rows_processed = 0
+        self.rows_processed = []
 
         def process_simulation(writer, f, simulation):
             if self.login_expired: return # expired crendentials
@@ -82,10 +82,10 @@ class WQSession(requests.Session):
                     try:
                         if 'credentials' in r.json()['detail']:
                             self.login_expired = True
-                            return # debugging WIP
+                            return
                     except:
-                        logging.info(f'{thread} -- {r.content}')
-                        break
+                        logging.info(f'{thread} -- {r.content}') # usually gateway timeout
+                        return
             logging.info(f'{thread} -- Obtained simulation link: {nxt}')
             ok = True
             while True:
@@ -128,7 +128,7 @@ class WQSession(requests.Session):
                 ]
             writer.writerow(row)
             f.flush()
-            self.rows_processed += 1
+            self.rows_processed.append(simulation)
             logging.info(f'{thread} -- Result added to CSV!')
 
         try:
@@ -149,14 +149,11 @@ class WQSession(requests.Session):
                     _ = executor.map(lambda sim: process_simulation(writer, f, sim), data)
         except Exception as e:
             logging.info(f'Issue occurred! {type(e).__name__}: {e}')
-        return self.rows_processed
+        return [sim for sim in data if sim not in self.rows_processed]
 
 if __name__ == '__main__':
     TOTAL_ROWS = len(DATA)
-    CURR_ROWS = 0
-    while CURR_ROWS < TOTAL_ROWS:
+    while DATA:
         wq = WQSession()
-        print(f'{CURR_ROWS}/{TOTAL_ROWS} alpha simulations...')
-        rows = wq.simulate(DATA)
-        DATA = DATA[CURR_ROWS:]
-        CURR_ROWS += rows
+        print(f'{TOTAL_ROWS-len(DATA)}/{TOTAL_ROWS} alpha simulations...')
+        DATA = wq.simulate(DATA)
