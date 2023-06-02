@@ -4,6 +4,7 @@ import logging
 import csv
 import pandas as pd
 from concurrent.futures import as_completed, ThreadPoolExecutor
+from threading import current_thread
 
 team_params = {
     'status':               'ACTIVE',
@@ -21,6 +22,7 @@ r = wq.get('https://api.worldquantbrain.com/users/self/teams', params=team_param
 team_id = r['results'][0]['id']
 
 def scrape(result):
+    thread = current_thread().name
     alpha = result['regular']['code']
     settings = result['settings']
     aid = result['id']
@@ -49,8 +51,8 @@ def scrape(result):
                 score['max_corr'] = max_corr
                 break
             except:
-                try:    logging.info(f'Correlation check throttled(?): {corr_r.json()}')
-                except: logging.info(f'Issue found when checking correlation: {corr_r.content}')
+                try:    logging.info(f'{thread} -- Correlation check throttled(?): {corr_r.json()}')
+                except: logging.info(f'{thread} -- Issue found when checking correlation: {corr_r.content}')
                 score['max_corr'] = -100
                 break
         else:
@@ -72,7 +74,7 @@ def scrape(result):
             new_alpha = new_alpha.replace(';;', ';')
         return new_alpha
     score['passed'], score['alpha'], score['link'] = passed, clean(alpha), f'https://platform.worldquantbrain.com/alpha/{aid}'
-    logging.info(f'Success!\n{score}')
+    logging.info(f'{thread} -- Success! -- {score}')
     return score
 
 ret = []
