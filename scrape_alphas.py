@@ -58,7 +58,20 @@ def scrape(result):
 
     # merge everything else
     score |= settings
-    score['passed'], score['alpha'], score['link'] = passed, alpha.replace('\n', ';').replace(';;', ';').strip(), f'https://platform.worldquantbrain.com/alpha/{aid}'
+    def clean(alpha):
+        lines = alpha.split('\n')
+        new_lines = []
+        for line in lines:
+            while '#' in line:
+                line = line[:line.find('#')]
+                line = line.strip()
+            line = line.strip()
+            if line: new_lines.append(line)
+        new_alpha = ';'.join(new_lines)
+        while ';;' in new_alpha:
+            new_alpha = new_alpha.replace(';;', ';')
+        return new_alpha
+    score['passed'], score['alpha'], score['link'] = passed, clean(alpha), f'https://platform.worldquantbrain.com/alpha/{aid}'
     logging.info(f'Success!\n{score}')
     return score
 
