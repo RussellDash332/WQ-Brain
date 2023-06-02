@@ -51,7 +51,7 @@ def scrape(result):
             except:
                 try:    logging.info(f'Correlation check throttled(?): {corr_r.json()}')
                 except: logging.info(f'Issue found when checking correlation: {corr_r.content}')
-                score['max_corr'] = -1
+                score['max_corr'] = -100
                 break
         else:
             time.sleep(2.5)
