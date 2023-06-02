@@ -45,7 +45,7 @@ class WQSession(requests.Session):
             if self.login_expired: return # expired crendentials
 
             thread = current_thread().name
-            alpha = simulation['code'].replace('\n', ';').replace(';;', ';')
+            alpha = simulation['code'].strip()
             delay = simulation.get('delay', 1)
             universe = simulation.get('universe', 'TOP3000')
             truncation = simulation.get('truncation', 0.1)
