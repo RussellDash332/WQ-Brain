@@ -105,5 +105,6 @@ with open(SCRAPE_FN, 'w', newline='') as c:
             except: pass
 if ret:
     pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(SCRAPE_FN, index=False)
+    print(f'python submit_alphas.py {SCRAPE_FN}')
 else:
     print('No luck :)')
