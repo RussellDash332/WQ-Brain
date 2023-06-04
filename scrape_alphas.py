@@ -69,9 +69,7 @@ def scrape(result):
                 line = line.strip()
             line = line.strip()
             if line: new_lines.append(line)
-        new_alpha = ';'.join(new_lines)
-        while ';;' in new_alpha:
-            new_alpha = new_alpha.replace(';;', ';')
+        new_alpha = ''.join(new_lines)
         return new_alpha
     score['passed'], score['alpha'], score['link'] = passed, clean(alpha), f'https://platform.worldquantbrain.com/alpha/{aid}'
     logging.info(f'{thread} -- Success! -- {score}')
