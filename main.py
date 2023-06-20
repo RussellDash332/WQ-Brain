@@ -1,5 +1,4 @@
 import csv
-import base64
 import logging
 import requests
 import json
@@ -31,11 +30,15 @@ class WQSession(requests.Session):
         with open(self.json_fn, 'r') as f:
             creds = json.loads(f.read())
             email, password = creds['email'], creds['password']
-            b64_auth = base64.b64encode(f'{email}:{password}'.encode('ascii')).decode('ascii')
-            r = self.post('https://api.worldquantbrain.com/authentication', headers={'Authorization': f'Basic {b64_auth}'})
+            self.auth = (email, password)
+            r = self.post('https://api.worldquantbrain.com/authentication')
         if 'user' not in r.json():
-            print(f'WARNING! {r.json()}')
-            input('Press enter to quit...')
+            if 'inquiry' in r.json():
+                input(f"Please complete biometric authentication at {r.url}/persona?inquiry={r.json()['inquiry']} before continuing...")
+                self.login()
+            else:
+                print(f'WARNING! {r.json()}')
+                input('Press enter to quit...')
         logging.info('Logged in to WQBrain!')
 
     def simulate(self, data):
@@ -148,7 +151,7 @@ class WQSession(requests.Session):
                 with ThreadPoolExecutor(max_workers=10) as executor: # 10 threads, only 3 can go in concurrently so this is no harm
                     _ = executor.map(lambda sim: process_simulation(writer, f, sim), data)
         except Exception as e:
-            logging.info(f'Issue occurred! {type(e).__name__}: {e}')
+            print(f'Issue occurred! {type(e).__name__}: {e}')
         return [sim for sim in data if sim not in self.rows_processed]
 
 if __name__ == '__main__':
