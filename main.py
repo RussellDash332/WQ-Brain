@@ -35,7 +35,8 @@ class WQSession(requests.Session):
         if 'user' not in r.json():
             if 'inquiry' in r.json():
                 input(f"Please complete biometric authentication at {r.url}/persona?inquiry={r.json()['inquiry']} before continuing...")
-                self.login()
+                rr = self.post(f"{r.url}/persona", data=r.json(), headers={'accept': 'application/json', 'content-type': 'application/json'})
+                print(rr.json())
             else:
                 print(f'WARNING! {r.json()}')
                 input('Press enter to quit...')
