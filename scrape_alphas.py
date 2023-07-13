@@ -14,12 +14,12 @@ team_params = {
 
 OFFSET, LIMIT = 0, 30
 def get_link(x):
-    start_date = '2023-05-31'
-    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&dateCreated%3E={start_date}T00:00:00-04:00&order=-is.sharpe&hidden=false'
+    return f'https://api.worldquantbrain.com/users/self/alphas?limit={LIMIT}&offset={x}&stage=IS%1fOS&is.sharpe%3E=1.25&is.turnover%3E=0.01&is.fitness%3E=1&status=UNSUBMITTED&order=-dateCreated&hidden=false'
 
 wq = WQSession()
 r = wq.get('https://api.worldquantbrain.com/users/self/teams', params=team_params).json()
 team_id = r['results'][0]['id']
+print('Obtained team info:', team_id)
 
 def scrape(result):
     thread = current_thread().name
@@ -30,6 +30,7 @@ def scrape(result):
     failed = sum(check['result'] in ['FAIL', 'ERROR'] for check in result['is']['checks'])
     if failed != 0: return -1
 
+    '''
     # score check
     while True:
         compare_r = wq.get(f'https://api.worldquantbrain.com/teams/{team_id}/alphas/{aid}/before-and-after-performance')
@@ -57,6 +58,18 @@ def scrape(result):
                 break
         else:
             time.sleep(2.5)
+    '''
+
+    # when scores don't matter anymore
+    while True:
+        check_r = wq.get(f'https://api.worldquantbrain.com/alphas/{aid}/check')
+        if check_r.content:
+            try:    checks = check_r.json()['is']['checks']; break
+            except: pass
+        time.sleep(2.5)
+    if not all(check['result'] == 'PASS' for check in checks): return -1
+    score = {'before': -1, 'after': -1}
+    score['max_corr'] = [check['value'] for check in checks if check['name'] == 'SELF_CORRELATION'][0]
 
     # merge everything else
     score |= settings
@@ -102,7 +115,7 @@ with open(SCRAPE_FN, 'w', newline='') as c:
             try:    logging.info(r.content)
             except: pass
 if ret:
-    pd.DataFrame(ret).sort_values(by='after', ascending=False).to_csv(SCRAPE_FN, index=False)
+    pd.DataFrame(ret).sort_values(by=['after', 'max_corr'], ascending=[False, True]).to_csv(SCRAPE_FN, index=False)
     print(f'python submit_alphas.py {SCRAPE_FN}')
 else:
     print('No luck :)')
